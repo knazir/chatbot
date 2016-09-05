@@ -8,7 +8,7 @@ from dateutil import parser as dateparser
 
 # Configuration
 SORTED_FILE_PATH = './messages_sorted.json'
-NGRAM_LIMIT = 3
+NGRAM_LIMIT = 4
 NAME = 'Kashif Nazir'
 
 # Sample Configuration
@@ -48,6 +48,10 @@ def create_sorted_file():
         return messages
 
 
+def build_messages():
+    return use_existing_sorted_file() if os.path.exists(SORTED_FILE_PATH) else create_sorted_file()
+
+
 def generate_ngrams(n, messages):
     ngrams_map = {}
     for thread in messages['threads']:
@@ -63,13 +67,9 @@ def generate_ngrams(n, messages):
     return ngrams_map
 
 
-def build_messages():
-    return use_existing_sorted_file() if os.path.exists(SORTED_FILE_PATH) else create_sorted_file()
-
-
 def create_sample_sentence(i, ngram_maps):
-    phrase = str(i + 1) + '. '
     next_start = random.choice(list(ngram_maps[SAMPLE_N].keys()))
+    phrase = str(i + 1) + '. ' + next_start + ' '
     for j in range(random.randint(SAMPLE_WORD_COUNT_MIN, SAMPLE_WORD_COUNT_MAX + 1)):
         random_choice = random.choice(ngram_maps[SAMPLE_N][next_start])
         next_start_list = next_start.split()[1:]

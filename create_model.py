@@ -9,7 +9,7 @@ from dateutil import parser as dateparser
 # Configuration
 SORTED_FILE_PATH = './messages_sorted.json'
 NGRAM_LIMIT = 3
-NAME = ''
+NAME = 'Kashif Nazir'
 
 # Sample Configuration
 GENERATE_SAMPLES = True
@@ -52,7 +52,7 @@ def generate_ngrams(n, messages):
     ngrams_map = {}
     for thread in messages['threads']:
         for message in thread['messages']:
-            if message['sender'] == NAME and len(message['text'].split()) > n:
+            if message['sender'] == NAME:
                 message_tokens = message['text'].split()
                 for gram in zip(*[message_tokens[i:] for i in range(n)]):
                     key = ' '.join(gram[:n - 1])
@@ -64,35 +64,29 @@ def generate_ngrams(n, messages):
 
 
 def build_messages():
-    if not os.path.exists(SORTED_FILE_PATH):
-        return create_sorted_file()
-    else:
-        return use_existing_sorted_file()
+    return use_existing_sorted_file() if os.path.exists(SORTED_FILE_PATH) else create_sorted_file()
 
 
-def build_ngram_map(messages):
-    ngram_map = {}
-    for n in range(2, NGRAM_LIMIT + 1):
-        ngram_map[n] = generate_ngrams(n, messages)
-    return ngram_map
+def create_sample_sentence(i, ngram_maps):
+    phrase = str(i + 1) + '. '
+    next_start = random.choice(list(ngram_maps[SAMPLE_N].keys()))
+    for j in range(random.randint(SAMPLE_WORD_COUNT_MIN, SAMPLE_WORD_COUNT_MAX + 1)):
+        random_choice = random.choice(ngram_maps[SAMPLE_N][next_start])
+        next_start_list = next_start.split()[1:]
+        next_start_list.append(random_choice)
+        if len(next_start_list) > 1 and next_start_list[-1] == next_start_list[-2]:
+            continue
+        next_start = ' '.join(next_start_list)
+        phrase += random_choice + ' '
+        if next_start not in ngram_maps[SAMPLE_N]:
+            break
+    return phrase[:-1]
 
 
 def generate_samples(ngram_maps):
     try:
-        for i in range(SAMPLE_SENTENCES):
-            phrase = str(i + 1) + '. '
-            next_start = random.choice(list(ngram_maps[SAMPLE_N].keys()))
-            for j in range(random.randint(SAMPLE_WORD_COUNT_MIN, SAMPLE_WORD_COUNT_MAX + 1)):
-                random_choice = random.choice(ngram_maps[SAMPLE_N][next_start])
-                next_start_list = next_start.split()[1:]
-                next_start_list.append(random_choice)
-                if len(next_start_list) > 1 and next_start_list[-1] == next_start_list[-2]:
-                    continue
-                next_start = ' '.join(next_start_list)
-                phrase += random_choice + ' '
-                if next_start not in ngram_maps[SAMPLE_N]:
-                    break
-            print(phrase[:-1])
+        sample_list = [create_sample_sentence(i, ngram_maps) for i in range(SAMPLE_SENTENCES)]
+        print('\n'.join(sample for sample in sample_list))
     except IndexError:
         print('\nUnable to find chat history for ' + NAME + ', please check your messages and try again.')
 
@@ -105,8 +99,8 @@ def main():
     messages = build_messages()
     print('Done.')
 
-    print('Generating Ngrams Map.')
-    ngram_maps = build_ngram_map(messages)
+    print('Generating Ngrams Map...')
+    ngram_maps = {n: generate_ngrams(n, messages) for n in range(2, NGRAM_LIMIT + 1)}
     print('Done.')
 
     if GENERATE_SAMPLES:

@@ -50,19 +50,31 @@ def generate_ngrams(n, messages):
     return ngrams_list
 
 
-if __name__ == '__main__':
+def build_messages():
+    if not os.path.exists(SORTED_FILE_PATH):
+        return create_sorted_file()
+    else:
+        return use_existing_sorted_file()
+
+
+def build_ngram_map(messages):
+    ngram_map = {}
+    for n in range(2, NGRAM_LIMIT + 1):
+        ngram_map[n] = generate_ngrams(n, messages)
+
+
+def main():
     if len(sys.argv) <= 1:
         raise Exception('Usage: create_model.py pathToMessagesJson')
 
     print('Parsing Chat History...')
-    if not os.path.exists(SORTED_FILE_PATH):
-        messages = create_sorted_file()
-    else:
-        messages = use_existing_sorted_file()
+    messages = build_messages()
     print('Done.')
 
     print('Generating Ngrams Map.')
-    ngram_map = {}
-    for n in range(2, NGRAM_LIMIT + 1):
-        ngram_map[n] = generate_ngrams(n, messages)
+    build_ngram_map(messages)
     print('Done.')
+
+
+if __name__ == '__main__':
+    main()
